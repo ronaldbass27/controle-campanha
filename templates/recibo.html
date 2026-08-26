@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Termo de Recebimento de Materiais</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; color: #333; }
+        .recibo-box { max-width: 700px; margin: 0 auto; border: 2px solid #333; padding: 30px; border-radius: 8px; }
+        h2 { text-align: center; text-transform: uppercase; margin-bottom: 20px; }
+        .info { font-size: 16px; line-height: 1.8; margin-bottom: 30px; }
+        .destaque { font-weight: bold; }
+        .assinatura-box { margin-top: 80px; text-align: center; }
+        .linha-assinatura { width: 80%; border-top: 1px solid #000; margin: 0 auto 10px auto; }
+        .btn-imprimir { display: block; width: 200px; margin: 30px auto; padding: 12px; background: #0056b3; color: white; text-align: center; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+        @media print {
+            .btn-imprimir { display: none; }
+            body { margin: 0; }
+            .recibo-box { border: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="recibo-box">
+        <h2>Termo de Entrega e Responsabilidade</h2>
+        <p style="text-align: right; font-size: 14px;">Data do lançamento: <strong>{{ mov[1] }}</strong></p>
+        
+        <div class="info">
+            <p>Declaro para os devidos fins de prestação de contas de campanha que recebi nesta data do comitê eleitoral os seguintes materiais abaixo discriminados:</p>
+            
+            <ul>
+                <li>Item: <span class="destaque">{{ mov[3] }}</span></li>
+                <li>Quantidade: <span class="destaque">{{ mov[4] }} unidades</span></li>
+                <li>Responsável pela retirada: <span class="destaque">{{ mov[5] }}</span></li>
+            </ul>
+            
+            <p>O recebedor assume total responsabilidade pela correta distribuição dos materiais em conformidade com a legislação eleitoral vigente.</p>
+        </div>
+
+        <div class="assinatura-box">
+            <div class="linha-assinatura"></div>
+            <p>Assinatura do Recebedor<br><strong>{{ mov[5] }}</strong></p>
+        </div>
+
+        <button class="btn-imprimir" onclick="window.print()">Imprimir Termo</button>
+    </div>
+
+</body>
+</html>

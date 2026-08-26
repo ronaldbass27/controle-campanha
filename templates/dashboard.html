@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Controle de Campanha</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #dee2e6; padding-bottom: 15px; margin-bottom: 20px; }
+        .header h2 { margin: 0; font-size: 20px; color: #2c3e50; }
+        .topo-acoes-dir { display: flex; gap: 10px; align-items: center; }
+        .btn-sair { background: #e74c3c; color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 14px; }
+        
+        /* Saldos e Alertas */
+        .estoque-barra { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .estoque-item { background: #f1f3f5; padding: 12px 18px; border-radius: 6px; font-size: 14px; border: 1px solid #e9ecef; border-left: 4px solid #007bff; }
+        .estoque-item.alerta { border-left-color: #dc3545; background: #fff5f5; }
+        .estoque-item span { font-weight: bold; color: #007bff; font-size: 16px; margin-left: 5px; }
+        .estoque-item.alerta span { color: #dc3545; }
+        .aviso-baixo { font-size: 11px; color: #dc3545; display: block; margin-top: 2px; font-weight: bold; }
+
+        /* Ações e Buscas */
+        .acoes-topo { display: flex; justify-content: space-between; margin-bottom: 25px; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .grupo-botoes { display: flex; gap: 10px; flex-wrap: wrap; position: relative; }
+        .btn-acao { padding: 10px 16px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; }
+        .btn-acao.secundario { background: #495057; }
+        .btn-acao.usuario { background: #6f42c1; }
+        
+        /* Dropdown de Relatórios */
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-conteudo { display: none; position: absolute; background-color: #fff; min-width: 180px; box-shadow: 0px 8px 16px rgba(0,0,0,0.15); z-index: 10; border-radius: 6px; border: 1px solid #dee2e6; overflow: hidden; }
+        .dropdown-conteudo a { color: #333; padding: 12px 16px; text-decoration: none; display: block; font-size: 14px; }
+        .dropdown-conteudo a:hover { background-color: #f1f3f5; }
+        .dropdown:hover .dropdown-conteudo { display: block; }
+
+        .busca-form { display: flex; gap: 5px; }
+        .busca-form input { padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px; width: 220px; }
+        .busca-form button { padding: 8px 12px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; }
+
+        /* Janelas Modais (Pop-ups) */
+        .modal-fundo { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center; }
+        .modal-caixa { background: white; padding: 25px; border-radius: 8px; width: 100%; max-width: 550px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; }
+        .modal-fechar { position: absolute; top: 15px; right: 20px; font-size: 20px; cursor: pointer; color: #adb5bd; font-weight: bold; }
+        .modal-fechar:hover { color: #dc3545; }
+        .modal-caixa h3 { margin-top: 0; font-size: 18px; color: #2c3e50; margin-bottom: 20px; border-bottom: 1px solid #dee2e6; padding-bottom: 10px; }
+
+        /* Formulários dentro do Modal */
+        .linha-item { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        input, select { padding: 9px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px; width: 100%; box-sizing: border-box; }
+        button.btn-salvar { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 500; width: 100%; margin-top: 15px; }
+        .btn-adicionar-linha { background: #17a2b8; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; margin-bottom: 15px; }
+        .btn-remover-linha { background: #dc3545; color: white; border: none; padding: 9px 12px; border-radius: 4px; cursor: pointer; }
+
+        /* Tabela */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { padding: 12px; border-bottom: 1px solid #dee2e6; text-align: left; }
+        th { background: #f8f9fa; color: #495057; font-weight: 600; }
+        .entrada { color: #28a745; font-weight: bold; }
+        .saida { color: #dc3545; font-weight: bold; }
+        .devolucao { color: #fd7e14; font-weight: bold; }
+        .acoes-linha { display: flex; align-items: center; gap: 12px; }
+        .btn-recibo { color: #007bff; text-decoration: none; font-size: 13px; font-weight: 500; }
+        .btn-recibo:hover { text-decoration: underline; }
+        .btn-lixeira { color: #adb5bd; text-decoration: none; font-size: 14px; transition: color 0.2s; }
+        .btn-lixeira:hover { color: #dc3545; }
+        
+        /* Paginação */
+        .paginacao { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px; }
+        .paginacao a, .paginacao span { padding: 8px 14px; border: 1px solid #dee2e6; border-radius: 4px; text-decoration: none; font-size: 14px; color: #007bff; background: white; }
+        .paginacao a:hover { background: #f1f3f5; }
+        .paginacao .ativo { background: #007bff; color: white; border-color: #007bff; }
+        .paginacao .desativado { color: #6c757d; pointer-events: none; background: #e9ecef; border-color: #dee2e6; }
+
+        h4 { margin: 20px 0 10px 0; font-size: 16px; color: #495057; }
+    </style>
+    <script>
+        function abrirModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+        function fecharModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+        function confirmarExclusao() {
+            return confirm("Deseja realmente excluir este lançamento? O estoque será recalculado.");
+        }
+        function adicionarLinhaItem() {
+            var container = document.getElementById('lista-itens-movimento');
+            var primeiraLinha = container.querySelector('.linha-item');
+            var novaLinha = primeiraLinha.cloneNode(true);
+            novaLinha.querySelector('input[name="quantidade[]"]').value = '';
+            container.appendChild(novaLinha);
+        }
+        function removerLinhaItem(botao) {
+            var container = document.getElementById('lista-itens-movimento');
+            if (container.querySelectorAll('.linha-item').length > 1) {
+                botao.closest('.linha-item').remove();
+            } else {
+                alert("Você precisa manter pelo menos um item.");
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Painel de Controle - Campanha</h2>
+            <div class="topo-acoes-dir">
+                <span style="font-size: 13px; color: #666;">Logado como: <strong>{{ session['usuario'] }}</strong></span>
+                <a href="/logout" class="btn-sair">Sair</a>
+            </div>
+        </div>
+        
+        <!-- Saldos -->
+        <div class="estoque-barra">
+            {% for mat, qtd in saldos.items() %}
+            <div class="estoque-item {% if qtd < 500 %}alerta{% endif %}">
+                {{ mat }}: <span>{{ qtd }}</span>
+                {% if qtd < 500 %}
+                <span class="aviso-baixo">⚠ Estoque Baixo!</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Ações do Topo -->
+        <div class="acoes-topo">
+            <div class="grupo-botoes">
+                <button class="btn-acao" onclick="abrirModal('modal-movimento')">+ Nova Movimentação (Kit)</button>
+                <button class="btn-acao secundario" onclick="abrirModal('modal-material')">+ Cadastrar Item</button>
+                <button class="btn-acao usuario" onclick="abrirModal('modal-usuario')">+ Novo Usuário</button>
+                
+                <!-- Menu Dropdown de Relatórios -->
+                <div class="dropdown">
+                    <button class="btn-acao secundario">📊 Relatórios ▾</button>
+                    <div class="dropdown-conteudo">
+                        <a href="/relatorio_estoque" target="_blank">📄 Rel. Estoque</a>
+                        <a href="/relatorio_movimentacoes" target="_blank">📈 Rel. Movimentações</a>
+                    </div>
+                </div>
+            </div>
+            
+            <form class="busca-form" action="/dashboard" method="GET">
+                <input type="text" name="busca" placeholder="Buscar responsável ou item..." value="{{ busca }}">
+                <button type="submit">Buscar</button>
+                {% if busca %}
+                <a href="/dashboard" style="padding: 8px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; font-size: 13px;">Limpar</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Janelas Modais (Pop-ups) -->
+        <div id="modal-movimento" class="modal-fundo">
+            <div class="modal-caixa">
+                <span class="modal-fechar" onclick="fecharModal('modal-movimento')">&times;</span>
+                <h3>Registrar Movimentação com Vários Itens</h3>
+                <form action="/add" method="POST">
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <select name="tipo" required style="width: 200px;">
+                            <option value="Saída">Saída (Distribuição / Kit)</option>
+                            <option value="Entrada">Entrada (Gráfica)</option>
+                            <option value="Devolução">Devolução (Sobra)</option>
+                        </select>
+                        <input type="text" name="responsavel" placeholder="Nome do Responsável / Gráfica" required>
+                    </div>
+
+                    <div id="lista-itens-movimento">
+                        <div class="linha-item">
+                            <select name="material[]" required style="flex: 2;">
+                                {% for mat in materiais %}
+                                <option value="{{ mat }}">{{ mat }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="number" name="quantidade[]" placeholder="Qtd" required style="width: 100px;">
+                            <button type="button" class="btn-remover-linha" onclick="removerLinhaItem(this)">X</button>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn-adicionar-linha" onclick="adicionarLinhaItem()">+ Adicionar Outro Item</button>
+                    <button type="submit" class="btn-salvar">Salvar Movimentação e Gerar Termo</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="modal-material" class="modal-fundo">
+            <div class="modal-caixa">
+                <span class="modal-fechar" onclick="fecharModal('modal-material')">&times;</span>
+                <h3>Cadastrar Novo Tipo de Material</h3>
+                <form action="/add_material" method="POST">
+                    <input type="text" name="novo_material" placeholder="Ex: Boné, Bottom, Colete..." required style="margin-bottom: 15px;">
+                    <button type="submit" class="btn-salvar">Adicionar Material</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="modal-usuario" class="modal-fundo">
+            <div class="modal-caixa">
+                <span class="modal-fechar" onclick="fecharModal('modal-usuario')">&times;</span>
+                <h3>Criar Novo Acesso para Usuário</h3>
+                <form action="/cadastrar_usuario" method="POST">
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <input type="text" name="novo_username" placeholder="Nome de Usuário (Ex: joao)" required>
+                        <input type="password" name="nova_senha" placeholder="Senha" required>
+                        <select name="tipo_usuario" required>
+                            <option value="operador">Operador</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-salvar">Criar Usuário</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Histórico -->
+        <h4>Histórico de Movimentações</h4>
+        <table>
+            <tr>
+                <th>Data/Hora</th>
+                <th>Tipo</th>
+                <th>Material</th>
+                <th>Qtd</th>
+                <th>Responsável / Destino</th>
+                <th>Ações / Recibo</th>
+            </tr>
+            {% for mov in movimentos %}
+            <tr>
+                <td>{{ mov[1] }}</td>
+                <td class="{% if mov[2] == 'Entrada' %}entrada{% elif mov[2] == 'Devolução' %}devolucao{% else %}saida{% endif %}">{{ mov[2] }}</td>
+                <td>{{ mov[3] }}</td>
+                <td>{{ mov[4] }}</td>
+                <td>{{ mov[5] }}</td>
+                <td>
+                    <div class="acoes-linha">
+                        {% if mov[2] == 'Saída' %}
+                        <a href="/recibo/{{ mov[0] }}" target="_blank" class="btn-recibo">Imprimir Termo</a>
+                        {% else %}
+                        <span style="color: #ced4da;">-</span>
+                        {% endif %}
+                        
+                        <a href="/delete/{{ mov[0] }}" class="btn-lixeira" title="Excluir lançamento" onclick="return confirmarExclusao()">🗑️</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <!-- Barra de Paginação -->
+        {% if total_pages > 1 %}
+        <div class="paginacao">
+            {% if page > 1 %}
+            <a href="/dashboard?page={{ page - 1 }}{% if busca %}&busca={{ busca }}{% endif %}">« Anterior</a>
+            {% else %}
+            <span class="desativado">« Anterior</span>
+            {% endif %}
+
+            <span>Página {{ page }} de {{ total_pages }}</span>
+
+            {% if page < total_pages %}
+            <a href="/dashboard?page={{ page + 1 }}{% if busca %}&busca={{ busca }}{% endif %}">Próxima »</a>
+            {% else %}
+            <span class="desativado">Próxima »</span>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
